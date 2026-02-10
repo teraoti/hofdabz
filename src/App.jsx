@@ -14,7 +14,7 @@ const BRAND = {
   tagline: "Luxury perfumes and home diffusers, crafted to elevate your space.",
   ctaPrimary: "Shop bestsellers",
   ctaSecondary: "Contact us",
-  email: "hello@hauzofd.com", // placeholder
+  email: "Hauzofdabsuk@gmail.com", // placeholder
   location: "United Kingdom", // placeholder
   instagram: "@hauzofdabs", // placeholder
 };
