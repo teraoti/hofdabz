@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
+import useScrollReveal, { revealClass } from '@/hooks/useScrollReveal';
 
 const shopProducts = [
   {
@@ -28,19 +29,9 @@ const shopProducts = [
 ];
 
 export default function Shop() {
-  const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [notice, setNotice] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.1 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
 
   const handleCheckout = async (productId: string) => {
     setLoading(productId);
@@ -65,25 +56,24 @@ export default function Shop() {
   };
 
   return (
-    <section id="shop" ref={sectionRef} className="relative py-16 md:py-32 bg-white">
+    <section id="shop" ref={ref} className="relative py-16 md:py-32 bg-background-50">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Header */}
         <div className="text-center mb-12 md:mb-20">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-16 h-px bg-[#b8965a]"></div>
-            <span className="text-xs uppercase tracking-[0.3em] text-[#b8965a]" style={{ fontFamily: "'Inter', sans-serif" }}>Shop</span>
-            <div className="w-16 h-px bg-[#b8965a]"></div>
+            <div className="w-16 h-px bg-accent-500"></div>
+            <span className="text-xs uppercase tracking-[0.3em] text-accent-500" style={{ fontFamily: "var(--font-label)" }}>Shop</span>
+            <div className="w-16 h-px bg-accent-500"></div>
           </div>
-          <h2 className="text-4xl md:text-6xl text-[#1a1a1a] mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          <h2 className="text-4xl md:text-6xl text-foreground-950 mb-4" style={{ fontFamily: "var(--font-heading)" }}>
             Order Now
           </h2>
-          <p className="text-[15px] text-[#6b6560] max-w-xl mx-auto" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <p className="text-[15px] text-foreground-600 max-w-xl mx-auto" style={{ fontFamily: "var(--font-body)" }}>
             Discover your signature scent and transform your space with our curated collection
           </p>
         </div>
 
         {notice && (
-          <div className="mb-10 max-w-xl mx-auto p-4 bg-[#fdf6ec] border border-[#b8965a] text-[#b8965a] text-sm text-center" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <div className="mb-10 max-w-xl mx-auto p-4 bg-accent-100/50 border border-accent-500 text-accent-700 text-sm text-center" style={{ fontFamily: "var(--font-body)" }}>
             Stripe payments are not yet connected. Please contact us at hello@hauzofdabs.com to place your order.
           </div>
         )}
@@ -92,36 +82,33 @@ export default function Shop() {
           {shopProducts.map((product, index) => (
             <div
               key={product.id}
-              className={`group transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-              style={{ transitionDelay: `${index * 150}ms` }}
+              className={`group transition-all duration-700 ${revealClass(isVisible, index * 150)}`}
             >
-              <div className="border border-[#e8e0d5] hover:border-[#b8965a] transition-all duration-500 overflow-hidden">
-                {/* Image */}
-                <div className="relative w-full h-56 md:h-72 overflow-hidden bg-[#f7f3ee]">
+              <div className="border border-background-300 hover:border-accent-500 transition-all duration-500 overflow-hidden">
+                <div className="relative w-full h-56 md:h-72 overflow-hidden bg-background-100">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
-                {/* Info */}
                 <div className="p-6 md:p-8">
-                  <h3 className="text-2xl text-[#1a1a1a] mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                  <h3 className="text-2xl text-foreground-950 mb-2" style={{ fontFamily: "var(--font-heading)" }}>
                     {product.name}
                   </h3>
-                  <p className="text-sm text-[#9e9690] mb-5 leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <p className="text-sm text-foreground-400 mb-5 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                     {product.description}
                   </p>
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-3xl text-[#1a1a1a]" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                    <span className="text-3xl text-foreground-950" style={{ fontFamily: "var(--font-heading)" }}>
                       £{(product.price / 100).toFixed(0)}
                     </span>
                   </div>
                   <button
                     onClick={() => handleCheckout(product.id)}
                     disabled={loading === product.id}
-                    className="w-full py-4 bg-[#1a1a1a] text-white text-sm uppercase tracking-widest hover:bg-[#b8965a] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
-                    style={{ fontFamily: "'Inter', sans-serif" }}
+                    className="w-full py-4 border border-foreground-800 text-foreground-800 text-sm uppercase tracking-widest hover:bg-foreground-950 hover:text-background-50 hover:border-foreground-950 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
+                    style={{ fontFamily: "var(--font-label)" }}
                   >
                     {loading === product.id ? 'Processing...' : 'Buy Now'}
                   </button>
@@ -131,22 +118,21 @@ export default function Shop() {
           ))}
         </div>
 
-        {/* CTA Banner */}
         <div className="mt-16 md:mt-24 relative overflow-hidden">
           <img
             src="https://readdy.ai/api/search-image?query=luxury%20perfume%20bottles%20arranged%20on%20pale%20stone%20surface%20soft%20morning%20light%20warm%20cream%20tones%20editorial%20lifestyle%20photography%20minimalist%20composition%20calm%20refined%20aesthetic%20elegant%20fragrance%20scene%20ivory%20background&width=1400&height=500&seq=cta-lifestyle-light-001&orientation=landscape"
-            alt="Hauz of Dabs Collection"
-            className="w-full h-[300px] md:h-[400px] object-cover object-top"
+            alt="Hauz of Dabs luxury fragrance collection"
+            className="w-full h-[300px] md:h-[400px] object-contain"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a]/70 via-[#1a1a1a]/40 to-transparent flex items-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-foreground-950/70 via-foreground-950/40 to-transparent flex items-center">
             <div className="px-6 md:px-16">
-              <p className="text-3xl md:text-5xl text-white leading-tight mb-6" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                Discover your<br /><em className="font-light text-[#d4b87a]">signature scent</em> today
+              <p className="text-3xl md:text-5xl text-background-50 leading-tight mb-6" style={{ fontFamily: "var(--font-heading)" }}>
+                Discover your<br /><em className="font-light text-accent-300">signature scent</em> today
               </p>
               <a
                 href="#contact"
-                className="inline-block px-8 py-3 border border-white text-white text-xs uppercase tracking-widest hover:bg-white hover:text-[#1a1a1a] transition-all duration-300 whitespace-nowrap"
-                style={{ fontFamily: "'Inter', sans-serif" }}
+                className="inline-block px-8 py-3 border border-background-50 text-background-50 text-xs uppercase tracking-widest hover:bg-background-50 hover:text-foreground-950 transition-all duration-300 whitespace-nowrap cursor-pointer"
+                style={{ fontFamily: "var(--font-label)" }}
               >
                 Get in Touch
               </a>

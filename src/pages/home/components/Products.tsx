@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
+import useScrollReveal, { revealClass } from '@/hooks/useScrollReveal';
 
 const products = [
   {
@@ -28,34 +29,23 @@ const products = [
 ];
 
 export default function Products() {
-  const [isVisible, setIsVisible] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.1 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
 
   return (
-    <section id="products" ref={sectionRef} className="relative py-16 md:py-32 bg-[#faf9f7]">
+    <section id="products" ref={ref} className="relative py-16 md:py-32 bg-background-100">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 md:mb-20">
           <div>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-px bg-[#b8965a]"></div>
-              <span className="text-xs uppercase tracking-[0.3em] text-[#b8965a]" style={{ fontFamily: "'Inter', sans-serif" }}>The Collection</span>
+              <div className="w-16 h-px bg-accent-500"></div>
+              <span className="text-xs uppercase tracking-[0.3em] text-accent-500" style={{ fontFamily: "var(--font-label)" }}>The Collection</span>
             </div>
-            <h2 className="text-4xl md:text-6xl text-[#1a1a1a] leading-tight" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            <h2 className="text-4xl md:text-6xl text-foreground-950 leading-tight" style={{ fontFamily: "var(--font-heading)" }}>
               Our Fragrances
             </h2>
           </div>
-          <a href="#shop" className="inline-block mt-4 md:mt-0 text-sm uppercase tracking-widest text-[#1a1a1a] border-b border-[#1a1a1a] pb-1 hover:text-[#b8965a] hover:border-[#b8965a] transition-all duration-300 whitespace-nowrap cursor-pointer" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <a href="#shop" className="inline-block mt-4 md:mt-0 text-sm uppercase tracking-widest text-foreground-950 border-b border-foreground-950 pb-1 hover:text-accent-500 hover:border-accent-500 transition-all duration-300 whitespace-nowrap cursor-pointer" style={{ fontFamily: "var(--font-label)" }}>
             Shop All
           </a>
         </div>
@@ -64,34 +54,29 @@ export default function Products() {
           {products.map((product, index) => (
             <div
               key={product.id}
-              className={`group transition-all duration-700 cursor-pointer ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-              style={{ transitionDelay: `${index * 150}ms` }}
+              className={`group transition-all duration-700 cursor-pointer ${revealClass(isVisible, index * 150)}`}
               onMouseEnter={() => setHovered(product.id)}
               onMouseLeave={() => setHovered(null)}
             >
-              {/* Image */}
-              <div className="relative w-full h-[320px] md:h-[480px] overflow-hidden bg-[#f0ebe3] mb-6">
+              <div className="relative w-full h-[320px] md:h-[480px] overflow-hidden bg-background-200 mb-6">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className={`w-full h-full object-cover object-top transition-transform duration-700 ${hovered === product.id ? 'scale-105' : 'scale-100'}`}
+                  className={`w-full h-full object-contain transition-transform duration-700 ${hovered === product.id ? 'scale-105' : 'scale-100'}`}
                 />
-                {/* Hover overlay */}
-                <div className={`absolute inset-0 bg-[#1a1a1a]/10 transition-opacity duration-300 ${hovered === product.id ? 'opacity-100' : 'opacity-0'}`}></div>
-                {/* Quick shop */}
-                <div className={`absolute bottom-0 left-0 right-0 bg-[#1a1a1a] py-4 text-center transition-all duration-300 ${hovered === product.id ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-                  <a href="#shop" className="text-xs uppercase tracking-widest text-white whitespace-nowrap" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <div className={`absolute inset-0 bg-foreground-950/10 transition-opacity duration-300 ${hovered === product.id ? 'opacity-100' : 'opacity-0'}`}></div>
+                <div className={`absolute bottom-0 left-0 right-0 bg-foreground-950/80 backdrop-blur-sm py-4 text-center transition-all duration-300 ${hovered === product.id ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                  <a href="#shop" className="text-xs uppercase tracking-widest text-background-50 whitespace-nowrap" style={{ fontFamily: "var(--font-label)" }}>
                     Quick Shop
                   </a>
                 </div>
               </div>
 
-              {/* Info */}
               <div>
-                <p className="text-xs uppercase tracking-widest text-[#b8965a] mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>{product.type}</p>
-                <h3 className="text-2xl text-[#1a1a1a] mb-1" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{product.name}</h3>
-                <p className="text-sm text-[#9e9690] mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>{product.notes}</p>
-                <p className="text-xl text-[#1a1a1a]" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{product.price}</p>
+                <p className="text-xs uppercase tracking-widest text-accent-500 mb-2" style={{ fontFamily: "var(--font-label)" }}>{product.type}</p>
+                <h3 className="text-2xl text-foreground-950 mb-1" style={{ fontFamily: "var(--font-heading)" }}>{product.name}</h3>
+                <p className="text-sm text-foreground-400 mb-3" style={{ fontFamily: "var(--font-body)" }}>{product.notes}</p>
+                <p className="text-xl text-foreground-950" style={{ fontFamily: "var(--font-heading)" }}>{product.price}</p>
               </div>
             </div>
           ))}

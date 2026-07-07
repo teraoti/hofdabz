@@ -1,43 +1,58 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
+import useScrollReveal, { revealClass } from '@/hooks/useScrollReveal';
 
 export default function Contact() {
-  const [isVisible, setIsVisible] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.1 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const [formError, setFormError] = useState<string | null>(null);
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus('idle');
+    setFormError(null);
+
+    const form = e.currentTarget as HTMLFormElement;
+    const formDataObj = new FormData(form);
+    const honeypot = formDataObj.get('website_alt')?.toString().trim() || '';
+
+    if (honeypot) {
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+      setIsSubmitting(false);
+      form.reset();
+      return;
+    }
+
     try {
-      const formBody = new URLSearchParams();
-      formBody.append('name', formData.name);
-      formBody.append('email', formData.email);
-      formBody.append('message', formData.message);
+      const body = new URLSearchParams();
+      body.append('name', formData.name);
+      body.append('email', formData.email);
+      body.append('message', formData.message);
+
       const response = await fetch('https://readdy.ai/api/form/d6m554o5dsf7sr1n66ng', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formBody.toString(),
+        body: body.toString(),
       });
-      if (response.ok) {
+
+      const responseText = await response.text();
+      let parsed: { code?: string; meta?: { message?: string; detail?: string } } = {};
+      try { parsed = JSON.parse(responseText); } catch { /* ignore parse errors */ }
+
+      if (response.ok && parsed.code === 'OK') {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
       } else {
+        const serverMsg = parsed?.meta?.message || parsed?.meta?.detail || 'Something went wrong. Please try again or email us directly.';
         setSubmitStatus('error');
+        setFormError(serverMsg);
       }
     } catch {
       setSubmitStatus('error');
+      setFormError('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,26 +64,34 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" ref={sectionRef} className="relative py-16 md:py-32 bg-[#faf9f7]">
+    <section id="contact" ref={ref} className="relative py-16 md:py-32 bg-background-100">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Header */}
         <div className="text-center mb-12 md:mb-20">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-16 h-px bg-[#b8965a]"></div>
-            <span className="text-xs uppercase tracking-[0.3em] text-[#b8965a]" style={{ fontFamily: "'Inter', sans-serif" }}>Contact</span>
-            <div className="w-16 h-px bg-[#b8965a]"></div>
+            <div className="w-16 h-px bg-accent-500"></div>
+            <span className="text-xs uppercase tracking-[0.3em] text-accent-500" style={{ fontFamily: "var(--font-label)" }}>Contact</span>
+            <div className="w-16 h-px bg-accent-500"></div>
           </div>
-          <h2 className="text-4xl md:text-6xl text-[#1a1a1a]" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          <h2 className="text-4xl md:text-6xl text-foreground-950" style={{ fontFamily: "var(--font-heading)" }}>
             Get in Touch
           </h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 md:gap-16 items-start">
-          {/* Form */}
-          <div className={`lg:col-span-3 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
+          <div className={`lg:col-span-3 ${revealClass(isVisible, 100)}`}>
             <form id="contact-form" data-readdy-form onSubmit={handleSubmit} className="space-y-5">
+              <input
+                type="text"
+                name="website_alt"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                readOnly
+                className="absolute opacity-0 pointer-events-none"
+                style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', opacity: 0 }}
+              />
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[#9e9690] mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>Name</label>
+                <label className="block text-xs uppercase tracking-widest text-foreground-400 mb-2" style={{ fontFamily: "var(--font-label)" }}>Name</label>
                 <input
                   type="text"
                   name="name"
@@ -76,12 +99,12 @@ export default function Contact() {
                   onChange={handleChange}
                   placeholder="Your full name"
                   required
-                  className="w-full px-5 py-4 bg-white border border-[#e8e0d5] text-[#1a1a1a] placeholder-[#c5bdb5] text-sm focus:outline-none focus:border-[#b8965a] transition-all duration-300"
-                  style={{ fontFamily: "'Inter', sans-serif" }}
+                  className="w-full px-5 py-4 bg-background-50 border border-background-300 text-foreground-950 placeholder-foreground-300 text-sm focus:outline-none focus:border-accent-500 transition-all duration-300"
+                  style={{ fontFamily: "var(--font-body)" }}
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[#9e9690] mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>Email</label>
+                <label className="block text-xs uppercase tracking-widest text-foreground-400 mb-2" style={{ fontFamily: "var(--font-label)" }}>Email</label>
                 <input
                   type="email"
                   name="email"
@@ -89,12 +112,12 @@ export default function Contact() {
                   onChange={handleChange}
                   placeholder="your@email.com"
                   required
-                  className="w-full px-5 py-4 bg-white border border-[#e8e0d5] text-[#1a1a1a] placeholder-[#c5bdb5] text-sm focus:outline-none focus:border-[#b8965a] transition-all duration-300"
-                  style={{ fontFamily: "'Inter', sans-serif" }}
+                  className="w-full px-5 py-4 bg-background-50 border border-background-300 text-foreground-950 placeholder-foreground-300 text-sm focus:outline-none focus:border-accent-500 transition-all duration-300"
+                  style={{ fontFamily: "var(--font-body)" }}
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-widest text-[#9e9690] mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>Message</label>
+                <label className="block text-xs uppercase tracking-widest text-foreground-400 mb-2" style={{ fontFamily: "var(--font-label)" }}>Message</label>
                 <textarea
                   name="message"
                   value={formData.message}
@@ -103,57 +126,56 @@ export default function Contact() {
                   required
                   maxLength={500}
                   rows={6}
-                  className="w-full px-5 py-4 bg-white border border-[#e8e0d5] text-[#1a1a1a] placeholder-[#c5bdb5] text-sm focus:outline-none focus:border-[#b8965a] transition-all duration-300 resize-none"
-                  style={{ fontFamily: "'Inter', sans-serif" }}
+                  className="w-full px-5 py-4 bg-background-50 border border-background-300 text-foreground-950 placeholder-foreground-300 text-sm focus:outline-none focus:border-accent-500 transition-all duration-300 resize-none"
+                  style={{ fontFamily: "var(--font-body)" }}
                 ></textarea>
-                <p className="text-xs text-[#c5bdb5] mt-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <p className="text-xs text-foreground-300 mt-1" style={{ fontFamily: "var(--font-body)" }}>
                   {formData.message.length}/500 characters
                 </p>
               </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-[#1a1a1a] text-white text-sm uppercase tracking-widest hover:bg-[#b8965a] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
-                style={{ fontFamily: "'Inter', sans-serif" }}
+                className="w-full py-4 border border-foreground-800 text-foreground-800 text-sm uppercase tracking-widest hover:bg-foreground-950 hover:text-background-50 hover:border-foreground-950 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
+                style={{ fontFamily: "var(--font-label)" }}
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
 
               {submitStatus === 'success' && (
-                <div className="p-4 bg-[#f0f7f0] border border-[#a8c8a8] text-[#4a7a4a] text-sm text-center" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <div className="p-4 bg-accent-100/50 border border-accent-300 text-accent-800 text-sm text-center" style={{ fontFamily: "var(--font-body)" }}>
                   Thank you! Your message has been sent successfully.
                 </div>
               )}
               {submitStatus === 'error' && (
-                <div className="p-4 bg-[#fdf0f0] border border-[#c8a8a8] text-[#7a4a4a] text-sm text-center" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  Something went wrong. Please try again or email us directly.
+                <div className="p-4 bg-secondary-100/50 border border-secondary-300 text-secondary-800 text-sm text-center" style={{ fontFamily: "var(--font-body)" }}>
+                  {formError || 'Something went wrong. Please try again or email us directly.'}
                 </div>
               )}
             </form>
           </div>
 
-          {/* Contact Info */}
-          <div className={`lg:col-span-2 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-            <div className="bg-white border border-[#e8e0d5] p-6 md:p-10 space-y-10">
+          <div className={`lg:col-span-2 ${revealClass(isVisible, 300)}`}>
+            <div className="bg-background-50 border border-background-300 p-6 md:p-10 space-y-10">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[#b8965a] mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>Email Us</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-accent-500 mb-3" style={{ fontFamily: "var(--font-label)" }}>Email Us</p>
                 <a
                   href="mailto:hello@hauzofdabs.com"
-                  className="text-lg text-[#1a1a1a] hover:text-[#b8965a] transition-colors duration-300"
-                  style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                  className="text-lg text-foreground-950 hover:text-accent-500 transition-colors duration-300"
+                  style={{ fontFamily: "var(--font-heading)" }}
                 >
                   hello@hauzofdabs.com
                 </a>
               </div>
-              <div className="w-full h-px bg-[#e8e0d5]"></div>
+              <div className="w-full h-px bg-background-300"></div>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[#b8965a] mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>Follow Us</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-accent-500 mb-3" style={{ fontFamily: "var(--font-label)" }}>Follow Us</p>
                 <a
                   href="https://instagram.com/hauzofdabs"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-lg text-[#1a1a1a] hover:text-[#b8965a] transition-colors duration-300"
-                  style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                  className="flex items-center gap-3 text-lg text-foreground-950 hover:text-accent-500 transition-colors duration-300"
+                  style={{ fontFamily: "var(--font-heading)" }}
                 >
                   <div className="w-8 h-8 flex items-center justify-center">
                     <i className="ri-instagram-line text-xl"></i>
@@ -161,10 +183,10 @@ export default function Contact() {
                   @hauzofdabs
                 </a>
               </div>
-              <div className="w-full h-px bg-[#e8e0d5]"></div>
+              <div className="w-full h-px bg-background-300"></div>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[#b8965a] mb-3" style={{ fontFamily: "'Inter', sans-serif" }}>Response Time</p>
-                <p className="text-[15px] text-[#6b6560]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <p className="text-xs uppercase tracking-[0.3em] text-accent-500 mb-3" style={{ fontFamily: "var(--font-label)" }}>Response Time</p>
+                <p className="text-[15px] text-foreground-600" style={{ fontFamily: "var(--font-body)" }}>
                   We aim to respond to all enquiries within 24–48 hours.
                 </p>
               </div>
