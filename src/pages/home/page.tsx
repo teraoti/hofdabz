@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import SEOHead from '@/components/feature/SEOHead';
 import BackToTop from '@/components/feature/BackToTop';
 import ThemeToggle from '@/components/feature/ThemeToggle';
+import { useTheme } from '@/hooks/useTheme';
 import Hero from './components/Hero';
 import BrandStory from './components/BrandStory';
 import Products from './components/Products';
@@ -29,6 +30,7 @@ const homeSchema = {
 export default function HomePage() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,6 +39,14 @@ export default function HomePage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const logoTextClass = scrolled
+    ? (isDark ? 'text-background-50' : 'text-foreground-950')
+    : 'text-background-50';
+
+  const leafFilterClass = scrolled
+    ? (isDark ? 'brightness-0 invert' : '')
+    : 'brightness-0 invert';
 
   return (
     <div className="bg-background-50 text-foreground-950">
@@ -62,16 +72,16 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between">
           <div className="flex items-center">
             <div className="flex items-start leading-none" style={{ fontFamily: "var(--font-heading)" }}>
-              <span className="text-2xl md:text-3xl tracking-wide text-foreground-950 font-semibold">HAUZ</span>
+              <span className={`text-2xl md:text-3xl tracking-wide font-semibold transition-colors duration-500 ${logoTextClass}`}>HAUZ</span>
               <div className="flex flex-col items-center mx-0.5 pt-1">
                 <img
                   src="https://public.readdy.ai/ai/img_res/e011fd85-7547-44dc-bb8e-1f1c41556f23.png"
                   alt="Hauz of Dabs leaf icon"
-                  className="w-3 h-3 md:w-3.5 md:h-3.5 object-contain"
+                  className={`w-3 h-3 md:w-3.5 md:h-3.5 object-contain transition-all duration-500 ${leafFilterClass}`}
                 />
-                <span className="text-[7px] md:text-[8px] tracking-widest text-foreground-950 uppercase">of</span>
+                <span className={`text-[7px] md:text-[8px] tracking-widest uppercase transition-colors duration-500 ${logoTextClass}`}>of</span>
               </div>
-              <span className="text-2xl md:text-3xl tracking-wide text-foreground-950 font-semibold">DABS</span>
+              <span className={`text-2xl md:text-3xl tracking-wide font-semibold transition-colors duration-500 ${logoTextClass}`}>DABS</span>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-10">
@@ -86,7 +96,7 @@ export default function HomePage() {
             <ThemeToggle />
             <button className="w-8 h-8 flex items-center justify-center cursor-pointer" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
               <div className="w-5 h-5 flex items-center justify-center">
-                <i className={`ri-${menuOpen ? 'close' : 'menu'}-line text-xl text-foreground-950`}></i>
+                <i className={`ri-${menuOpen ? 'close' : 'menu'}-line text-xl ${scrolled ? (isDark ? 'text-background-50' : 'text-foreground-950') : 'text-background-50'}`}></i>
               </div>
             </button>
           </div>
@@ -98,9 +108,6 @@ export default function HomePage() {
             <a href="#shop" onClick={() => setMenuOpen(false)} className="text-sm tracking-widest uppercase text-foreground-600 hover:text-accent-500 transition-colors cursor-pointer" style={{ fontFamily: "var(--font-label)" }}>Shop</a>
             <a href="#contact" onClick={() => setMenuOpen(false)} className="text-sm tracking-widest uppercase text-foreground-600 hover:text-accent-500 transition-colors cursor-pointer" style={{ fontFamily: "var(--font-label)" }}>Contact</a>
             <a href="#shop" onClick={() => setMenuOpen(false)} className="px-6 py-2 border border-accent-500 text-accent-500 text-sm tracking-widest uppercase hover:bg-accent-500 hover:text-background-50 transition-all duration-300 whitespace-nowrap text-center cursor-pointer" style={{ fontFamily: "var(--font-label)" }}>Order Now</a>
-            <div className="pt-2 border-t border-background-200">
-              <ThemeToggle />
-            </div>
           </div>
         )}
       </nav>
