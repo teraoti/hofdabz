@@ -24,7 +24,7 @@ export default function BrandStory() {
                 Inspired by calm moments and everyday rituals, each fragrance is composed to leave a subtle but memorable impression.
               </p>
               <p>
-                We believe in the power of scent to transform spaces and enhance experiences — bringing a sense of luxury to the everyday.
+                We believe in the power of scent to transform spaces and enhance experiences. Bringing a sense of luxury to the everyday.
               </p>
             </div>
             <div className="mt-8 md:mt-10 flex flex-wrap items-center gap-6 md:gap-8">
